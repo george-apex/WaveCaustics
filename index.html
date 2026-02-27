@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caustics 3D Light Ray Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Caustics 3D Simulator</h1>
+            <div class="header-controls">
+                <div class="view-presets">
+                    <button class="btn btn-sm" data-view="default">Default</button>
+                    <button class="btn btn-sm" data-view="top">Top</button>
+                    <button class="btn btn-sm" data-view="side">Side</button>
+                    <button class="btn btn-sm" data-view="underwater">Underwater</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <aside class="controls-panel">
+                <section class="control-section" data-section="scene">
+                    <div class="section-header">
+                        <h3>Scene</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="scene-depth">Water Depth</label>
+                            <div class="slider-row">
+                                <input type="range" id="scene-depth" min="0.5" max="5" step="0.1" value="2">
+                                <span id="sceneDepth-display" class="slider-value">2.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="scene-pool-size">Pool Size</label>
+                            <div class="slider-row">
+                                <input type="range" id="scene-pool-size" min="5" max="50" step="1" value="10">
+                                <span id="scenePoolSize-display" class="slider-value">10</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="floor-color">Floor Color</label>
+                            <input type="color" id="floor-color" value="#1a1a2e">
+                        </div>
+                        <div class="control-group">
+                            <label for="water-color">Water Tint</label>
+                            <input type="color" id="water-color" value="#4488aa">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section" data-section="waves">
+                    <div class="section-header">
+                        <h3>Waves</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="wave-amplitude">Amplitude</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-amplitude" min="0" max="3" step="0.01" value="0.3">
+                                <span id="waveAmplitude-display" class="slider-value">0.3</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-frequency">Frequency</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-frequency" min="0.5" max="10" step="0.1" value="2.0">
+                                <span id="waveFrequency-display" class="slider-value">2.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-speed">Speed</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-speed" min="0" max="3" step="0.1" value="1.0">
+                                <span id="waveSpeed-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-type">Type</label>
+                            <select id="wave-type">
+                                <option value="none">None (Flat)</option>
+                                <option value="sine">Sine</option>
+                                <option value="perlin" selected>Perlin Noise</option>
+                                <option value="gerstner">Gerstner</option>
+                                <option value="ripple">Ripple</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-direction">Direction (°)</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-direction" min="0" max="360" step="1" value="0">
+                                <span id="waveDirection-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-edge-damping">Edge Damping</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-edge-damping" min="0" max="1" step="0.05" value="0">
+                                <span id="waveEdgeDamping-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-layer-count">Layer Count</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-layer-count" min="1" max="4" step="1" value="1">
+                                <span id="waveLayerCount-display" class="slider-value">1</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="wave-opacity">Opacity</label>
+                            <div class="slider-row">
+                                <input type="range" id="wave-opacity" min="0" max="1" step="0.01" value="0.8">
+                                <span id="waveOpacity-display" class="slider-value">0.80</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="use-height-gradient"> Height Gradient Tint</label>
+                        </div>
+                        <div class="control-group height-gradient-controls">
+                            <label for="water-color-low">Color (Low)</label>
+                            <input type="color" id="water-color-low" value="#1a3a5c">
+                        </div>
+                        <div class="control-group height-gradient-controls">
+                            <label for="water-color-high">Color (High)</label>
+                            <input type="color" id="water-color-high" value="#88ccff">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section" data-section="light">
+                    <div class="section-header">
+                        <h3>Light</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="light-type">Type</label>
+                            <select id="light-type">
+                                <option value="directional" selected>Directional</option>
+                                <option value="point">Point Light</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="light-azimuth">Azimuth (°)</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-azimuth" min="0" max="360" step="1" value="45">
+                                <span id="lightAzimuth-display" class="slider-value">45</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="light-elevation">Elevation (°)</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-elevation" min="10" max="90" step="1" value="60">
+                                <span id="lightElevation-display" class="slider-value">60</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="light-intensity">Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-intensity" min="0.1" max="3" step="0.1" value="1.5">
+                                <span id="lightIntensity-display" class="slider-value">1.5</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="light-color">Color</label>
+                            <input type="color" id="light-color" value="#FFFFFF">
+                        </div>
+                        <div class="control-group point-light-controls">
+                            <label for="light-point-x">Point X</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-point-x" min="-10" max="10" step="0.5" value="0">
+                                <span id="lightPointX-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group point-light-controls">
+                            <label for="light-point-y">Point Y</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-point-y" min="0" max="15" step="0.5" value="5">
+                                <span id="lightPointY-display" class="slider-value">5</span>
+                            </div>
+                        </div>
+                        <div class="control-group point-light-controls">
+                            <label for="light-point-z">Point Z</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-point-z" min="-10" max="10" step="0.5" value="0">
+                                <span id="lightPointZ-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group point-light-controls">
+                            <label for="light-point-radius">Point Radius</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-point-radius" min="1" max="20" step="1" value="10">
+                                <span id="lightPointRadius-display" class="slider-value">10</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="light-animate"> Animate Light</label>
+                        </div>
+                        <div class="control-group light-animation-controls">
+                            <label for="light-animation-type">Animation Type</label>
+                            <select id="light-animation-type">
+                                <option value="orbit" selected>Orbit</option>
+                                <option value="bounce">Bounce</option>
+                                <option value="figure8">Figure-8</option>
+                            </select>
+                        </div>
+                        <div class="control-group light-animation-controls">
+                            <label for="light-animation-speed">Animation Speed</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-animation-speed" min="0.1" max="3" step="0.1" value="1.0">
+                                <span id="lightAnimationSpeed-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="light-caustics-tint">Caustics Tint</label>
+                            <input type="color" id="light-caustics-tint" value="#FFFFFF">
+                        </div>
+                        <div class="control-group">
+                            <label for="light-caustics-tint-strength">Tint Strength</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-caustics-tint-strength" min="0" max="1" step="0.05" value="0">
+                                <span id="lightCausticsTintStrength-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="multi-light-enabled"> Multi-Light Mode</label>
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="multi-light-count">Light Count</label>
+                            <div class="slider-row">
+                                <input type="range" id="multi-light-count" min="1" max="4" step="1" value="1">
+                                <span id="multiLightCount-display" class="slider-value">1</span>
+                            </div>
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="light2-azimuth">Light 2 Azimuth</label>
+                            <div class="slider-row">
+                                <input type="range" id="light2-azimuth" min="0" max="360" step="1" value="135">
+                                <span id="light2Azimuth-display" class="slider-value">135</span>
+                            </div>
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="light2-color">Light 2 Color</label>
+                            <input type="color" id="light2-color" value="#FF8844">
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="light2-intensity">Light 2 Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="light2-intensity" min="0" max="3" step="0.1" value="1.0">
+                                <span id="light2Intensity-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="light3-azimuth">Light 3 Azimuth</label>
+                            <div class="slider-row">
+                                <input type="range" id="light3-azimuth" min="0" max="360" step="1" value="0">
+                                <span id="light3Azimuth-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="light3-color">Light 3 Color</label>
+                            <input type="color" id="light3-color" value="#4488FF">
+                        </div>
+                        <div class="control-group multi-light-controls">
+                            <label for="light3-intensity">Light 3 Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="light3-intensity" min="0" max="3" step="0.1" value="1.2">
+                                <span id="light3Intensity-display" class="slider-value">1.2</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section" data-section="material">
+                    <div class="section-header">
+                        <h3>Material</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="material-ior">Refractive Index</label>
+                            <div class="slider-row">
+                                <input type="range" id="material-ior" min="1" max="2.5" step="0.01" value="1.33">
+                                <span id="materialIor-display" class="slider-value">1.33</span>
+                            </div>
+                            <small class="hint">Water: 1.33 | Glass: 1.5 | Diamond: 2.4</small>
+                        </div>
+                        <div class="control-group">
+                            <label for="material-dispersion">Dispersion</label>
+                            <div class="slider-row">
+                                <input type="range" id="material-dispersion" min="0" max="0.5" step="0.01" value="0">
+                                <span id="materialDispersion-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="material-clarity">Water Clarity</label>
+                            <div class="slider-row">
+                                <input type="range" id="material-clarity" min="0" max="1" step="0.05" value="0.8">
+                                <span id="materialClarity-display" class="slider-value">0.8</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="quality">
+                    <div class="section-header">
+                        <h3>Quality</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="water-resolution">Water Mesh</label>
+                            <div class="slider-row">
+                                <input type="range" id="water-resolution" min="32" max="1024" step="32" value="128" list="water-res-ticks">
+                                <datalist id="water-res-ticks">
+                                    <option value="256"></option>
+                                    <option value="512"></option>
+                                    <option value="768"></option>
+                                </datalist>
+                                <span id="waterResolution-display" class="slider-value">128</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="caustics-resolution">Caustics</label>
+                            <div class="slider-row">
+                                <input type="range" id="caustics-resolution" min="256" max="1024" step="128" value="256">
+                                <span id="causticsResolution-display" class="slider-value">256</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="display">
+                    <div class="section-header">
+                        <h3>Display</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="background-color">Background</label>
+                            <input type="color" id="background-color" value="#b5b5b5">
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="show-water" checked> Show Water Surface</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="show-floor" checked> Show Floor</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="show-light-helper"> Show Light Helper</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="wireframe-mode"> Wireframe Mode</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="show-walls" checked> Show Pool Walls</label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="effects">
+                    <div class="section-header">
+                        <h3>Effects</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="god-rays"> God Rays</label>
+                        </div>
+                        <div class="control-group god-rays-controls">
+                            <label for="god-rays-intensity">Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="god-rays-intensity" min="0" max="1" step="0.05" value="0.5">
+                                <span id="godRaysIntensity-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="control-group god-rays-controls">
+                            <label for="god-rays-decay">Decay</label>
+                            <div class="slider-row">
+                                <input type="range" id="god-rays-decay" min="0.8" max="1" step="0.01" value="0.95">
+                                <span id="godRaysDecay-display" class="slider-value">0.95</span>
+                            </div>
+                        </div>
+                        <div class="control-group god-rays-controls">
+                            <label for="god-rays-samples">Samples</label>
+                            <div class="slider-row">
+                                <input type="range" id="god-rays-samples" min="10" max="100" step="5" value="50">
+                                <span id="godRaysSamples-display" class="slider-value">50</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="volumetric-fog"> Volumetric Fog</label>
+                        </div>
+                        <div class="control-group fog-controls">
+                            <label for="fog-density">Density</label>
+                            <div class="slider-row">
+                                <input type="range" id="fog-density" min="0" max="2" step="0.05" value="1.0">
+                                <span id="fogDensity-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group fog-controls">
+                            <label for="fog-scattering">Scattering</label>
+                            <div class="slider-row">
+                                <input type="range" id="fog-scattering" min="0" max="2" step="0.1" value="1.0">
+                                <span id="fogScattering-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group fog-controls">
+                            <label for="fog-anisotropy">Anisotropy</label>
+                            <div class="slider-row">
+                                <input type="range" id="fog-anisotropy" min="-0.9" max="0.9" step="0.1" value="0.3">
+                                <span id="fogAnisotropy-display" class="slider-value">0.3</span>
+                            </div>
+                        </div>
+                        <div class="control-group fog-controls">
+                            <label for="fog-steps">Quality (Steps)</label>
+                            <div class="slider-row">
+                                <input type="range" id="fog-steps" min="8" max="64" step="4" value="32">
+                                <span id="fogSteps-display" class="slider-value">32</span>
+                            </div>
+                        </div>
+                        <div class="control-group fog-controls">
+                            <label for="fog-debug">Debug Mode</label>
+                            <select id="fog-debug">
+                                <option value="0" selected>Off</option>
+                                <option value="1">Raw Depth</option>
+                                <option value="2">Distance</option>
+                                <option value="3">World Y</option>
+                                <option value="4">Fog Density</option>
+                                <option value="5">Ray Region</option>
+                                <option value="6">Ray Direction</option>
+                                <option value="7">In Water Column</option>
+                                <option value="8">Fog Only</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-group fog-controls">
+                            <label><input type="checkbox" id="light-rays"> Show Light Rays</label>
+                        </div>
+                        <div class="control-group fog-controls">
+                            <label for="light-ray-intensity">Ray Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="light-ray-intensity" min="0" max="3" step="0.1" value="1.0">
+                                <span id="lightRayIntensity-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="bloom"> Bloom</label>
+                        </div>
+                        <div class="control-group bloom-controls">
+                            <label for="bloom-intensity">Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="bloom-intensity" min="0" max="2" step="0.05" value="0.5">
+                                <span id="bloomIntensity-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="control-group bloom-controls">
+                            <label for="bloom-threshold">Threshold</label>
+                            <div class="slider-row">
+                                <input type="range" id="bloom-threshold" min="0" max="2" step="0.05" value="0.8">
+                                <span id="bloomThreshold-display" class="slider-value">0.8</span>
+                            </div>
+                        </div>
+                        <div class="control-group bloom-controls">
+                            <label for="bloom-soft-knee">Soft Knee</label>
+                            <div class="slider-row">
+                                <input type="range" id="bloom-soft-knee" min="0" max="1" step="0.05" value="0.2">
+                                <span id="bloomSoftKnee-display" class="slider-value">0.2</span>
+                            </div>
+                        </div>
+                        <div class="control-group bloom-controls">
+                            <label for="bloom-radius">Radius</label>
+                            <div class="slider-row">
+                                <input type="range" id="bloom-radius" min="0" max="5" step="0.1" value="1.0">
+                                <span id="bloomRadius-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="temporal-reprojection"> Temporal Reprojection</label>
+                        </div>
+                        <div class="control-group temporal-controls">
+                            <label for="temporal-blend">Blend</label>
+                            <div class="slider-row">
+                                <input type="range" id="temporal-blend" min="0.05" max="0.5" step="0.01" value="0.1">
+                                <span id="temporalBlend-display" class="slider-value">0.1</span>
+                            </div>
+                        </div>
+                        <div class="control-group temporal-controls">
+                            <label for="feedback-min">Feedback Min</label>
+                            <div class="slider-row">
+                                <input type="range" id="feedback-min" min="0.5" max="0.95" step="0.01" value="0.9">
+                                <span id="feedbackMin-display" class="slider-value">0.9</span>
+                            </div>
+                        </div>
+                        <div class="control-group temporal-controls">
+                            <label for="feedback-max">Feedback Max</label>
+                            <div class="slider-row">
+                                <input type="range" id="feedback-max" min="0.5" max="0.99" step="0.01" value="0.95">
+                                <span id="feedbackMax-display" class="slider-value">0.95</span>
+                            </div>
+                        </div>
+                        <div class="control-group temporal-controls">
+                            <label for="variance-gamma">Variance Gamma</label>
+                            <div class="slider-row">
+                                <input type="range" id="variance-gamma" min="0.5" max="3" step="0.1" value="1.0">
+                                <span id="varianceGamma-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="floor">
+                    <div class="section-header">
+                        <h3>Floor</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="floor-pattern">Pattern</label>
+                            <select id="floor-pattern">
+                                <option value="solid" selected>Solid</option>
+                                <option value="checkerboard">Checkerboard</option>
+                                <option value="grid">Grid</option>
+                                <option value="dots">Dots</option>
+                                <option value="hexagon">Hexagon</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="pattern-scale">Pattern Scale</label>
+                            <div class="slider-row">
+                                <input type="range" id="pattern-scale" min="0.5" max="5" step="0.25" value="1.0">
+                                <span id="patternScale-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="show-heatmap"> Show Heatmap</label>
+                        </div>
+                        <div class="control-group heatmap-controls">
+                            <label for="heatmap-scale">Heatmap Scale</label>
+                            <div class="slider-row">
+                                <input type="range" id="heatmap-scale" min="0.5" max="3" step="0.1" value="1.0">
+                                <span id="heatmapScale-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="interaction">
+                    <div class="section-header">
+                        <h3>Interaction</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="interaction-enabled" checked> Enable Ripples</label>
+                        </div>
+                        <div class="control-group">
+                            <label for="ripple-strength">Ripple Strength</label>
+                            <div class="slider-row">
+                                <input type="range" id="ripple-strength" min="0" max="1" step="0.05" value="0.5">
+                                <span id="rippleStrength-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="ripple-radius">Ripple Radius</label>
+                            <div class="slider-row">
+                                <input type="range" id="ripple-radius" min="0.5" max="3" step="0.1" value="1.0">
+                                <span id="rippleRadius-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="ripple-decay">Ripple Decay</label>
+                            <div class="slider-row">
+                                <input type="range" id="ripple-decay" min="0.5" max="5" step="0.25" value="2.0">
+                                <span id="rippleDecay-display" class="slider-value">2.0</span>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="clear-ripples" class="btn btn-secondary btn-sm">Clear Ripples</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="debug">
+                    <div class="section-header">
+                        <h3>Debug</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="show-normals"> Show Normals</label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section" data-section="playback">
+                    <div class="section-header">
+                        <h3>Playback</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="button-group">
+                            <button id="play-btn" class="btn btn-success">▶ Play</button>
+                            <button id="pause-btn" class="btn btn-warning">⏸ Pause</button>
+                            <button id="reset-btn" class="btn btn-secondary">↺ Reset</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section" data-section="export">
+                    <div class="section-header">
+                        <h3>Export</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="button-group vertical">
+                            <button id="export-screenshot" class="btn btn-primary">📷 Screenshot</button>
+                            <button id="export-caustics" class="btn btn-primary">💾 Caustics Texture</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section" data-section="presets">
+                    <div class="section-header">
+                        <h3>Presets</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <select id="preset-select">
+                            <option value="">Select Preset...</option>
+                            <option value="pool">Swimming Pool</option>
+                            <option value="ocean">Ocean Waves</option>
+                            <option value="glass">Glass Panel</option>
+                            <option value="diamond">Diamond Prism</option>
+                            <option value="sunset">Sunset Glow</option>
+                            <option value="video-test">Video Test</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="light-media">
+                    <div class="section-header">
+                        <h3>Light Media</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="light-media-input">Image/Video</label>
+                            <input type="file" id="light-media-input" accept="image/*,video/*">
+                        </div>
+                        <div class="control-group">
+                            <label for="light-channel">Channel</label>
+                            <select id="light-channel">
+                                <option value="luminance">Luminance</option>
+                                <option value="red">Red</option>
+                                <option value="green">Green</option>
+                                <option value="blue">Blue</option>
+                                <option value="alpha">Alpha</option>
+                            </select>
+                        </div>
+                        <div class="button-group">
+                            <button id="clear-light-media" class="btn btn-secondary btn-sm">Clear</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-section collapsed" data-section="water-media">
+                    <div class="section-header">
+                        <h3>Water Media</h3>
+                        <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="control-group">
+                            <label for="water-media-input">Image/Video</label>
+                            <input type="file" id="water-media-input" accept="image/*,video/*">
+                        </div>
+                        <div class="video-controls" id="water-video-controls" style="display:none;">
+                            <div class="video-buttons">
+                                <button id="water-video-play" class="btn btn-secondary btn-sm">⏸ Pause</button>
+                                <button id="water-video-rewind" class="btn btn-secondary btn-sm">⏮ Rewind</button>
+                            </div>
+                            <div class="video-progress">
+                                <input type="range" id="water-video-seek" min="0" max="100" value="0">
+                                <span id="water-video-time">0:00 / 0:00</span>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="toggle-webcam" class="btn btn-secondary btn-sm">Start Webcam</button>
+                        </div>
+                        <div class="control-group">
+                            <label for="water-channel">Channel</label>
+                            <select id="water-channel">
+                                <option value="luminance">Luminance</option>
+                                <option value="red">Red</option>
+                                <option value="green">Green</option>
+                                <option value="blue">Blue</option>
+                                <option value="alpha">Alpha</option>
+                                <option value="motion">Motion</option>
+                            </select>
+                        </div>
+                        <div class="control-group motion-sensitivity-control">
+                            <label for="motion-sensitivity">Motion Sensitivity</label>
+                            <div class="slider-row">
+                                <input type="range" id="motion-sensitivity" min="1" max="10" step="0.5" value="3">
+                                <span id="motionSensitivity-display" class="slider-value">3.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="water-influence">Influence</label>
+                            <div class="slider-row">
+                                <input type="range" id="water-influence" min="0" max="1" step="0.05" value="0.5">
+                                <span id="waterInfluence-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="clear-water-media" class="btn btn-secondary btn-sm">Clear</button>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <div class="canvas-container" id="canvas-container">
+                <canvas id="main-canvas"></canvas>
+                <button id="mode-toggle" class="mode-toggle" title="Toggle between camera and interaction mode">
+                    <span class="mode-icon camera-icon">📷</span>
+                    <span class="mode-icon interaction-icon" style="display:none;">👆</span>
+                </button>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="status-bar">
+                <span id="status-text">Ready - Drag to orbit, scroll to zoom</span>
+                <span id="fps-counter">-- FPS</span>
+            </div>
+        </footer>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
