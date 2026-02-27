@@ -17,7 +17,15 @@ export class AudioReactive {
                 treble: { min: 2000, max: 16000 }
             },
             targets: {
-                amplitude: { band: 'bass', multiplier: 0.5, enabled: false },
+                amplitude: { 
+                    band: 'bass', 
+                    multiplier: 0.5, 
+                    enabled: false,
+                    mode: 'additive',
+                    minThreshold: 0.05,
+                    minValue: 0,
+                    maxValue: 1.0
+                },
                 frequency: { band: 'mid', multiplier: 0.3, enabled: false },
                 speed: { band: 'treble', multiplier: 0.2, enabled: false }
             }
@@ -107,6 +115,14 @@ export class AudioReactive {
         }
     }
     
+    setAmplitudeMode(mode, minThreshold, minValue, maxValue) {
+        const amp = this.settings.targets.amplitude;
+        if (mode !== undefined) amp.mode = mode;
+        if (minThreshold !== undefined) amp.minThreshold = minThreshold;
+        if (minValue !== undefined) amp.minValue = minValue;
+        if (maxValue !== undefined) amp.maxValue = maxValue;
+    }
+    
     update(deltaTime) {
         if (!this.enabled || !this.analyser) return;
         
@@ -157,10 +173,25 @@ export class AudioReactive {
         const wave = this.app.state.wave;
         
         if (targets.amplitude.enabled) {
-            const bandValue = this.smoothedBands[targets.amplitude.band];
-            const baseAmplitude = wave.amplitude;
-            const modAmplitude = baseAmplitude + bandValue * targets.amplitude.multiplier;
-            this.app.waterSurface?.setAmplitude(Math.max(0, modAmplitude));
+            const ampTarget = targets.amplitude;
+            const bandValue = this.smoothedBands[ampTarget.band];
+            
+            if (ampTarget.mode === 'threshold') {
+                const threshold = ampTarget.minThreshold;
+                const minVal = ampTarget.minValue;
+                const maxVal = ampTarget.maxValue;
+                
+                let normalizedValue = 0;
+                if (bandValue > threshold) {
+                    normalizedValue = Math.min(1, (bandValue - threshold) / (1 - threshold));
+                }
+                const mappedAmplitude = minVal + normalizedValue * (maxVal - minVal);
+                this.app.waterSurface?.setAmplitude(mappedAmplitude);
+            } else {
+                const baseAmplitude = wave.amplitude;
+                const modAmplitude = baseAmplitude + bandValue * ampTarget.multiplier;
+                this.app.waterSurface?.setAmplitude(Math.max(0, modAmplitude));
+            }
         }
         
         if (targets.frequency.enabled) {

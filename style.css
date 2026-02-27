@@ -618,12 +618,21 @@ select:focus {
     display: none;
 }
 
+.amplitude-additive-controls,
+.amplitude-threshold-controls {
+    transition: opacity var(--transition-normal);
+    display: none;
+}
+
 .height-gradient-controls.visible,
 .motion-sensitivity-control.visible,
 .fog-controls.visible,
 .bloom-controls.visible,
 .temporal-controls.visible,
-.multi-light-controls.visible {
+.multi-light-controls.visible,
+.audio-controls.visible,
+.amplitude-additive-controls.visible,
+.amplitude-threshold-controls.visible {
     display: block;
 }
 

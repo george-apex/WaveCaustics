@@ -611,10 +611,38 @@
                             </select>
                         </div>
                         <div class="control-group audio-controls">
-                            <label for="audio-amplitude-mult">Amplitude Multiplier</label>
+                            <label for="audio-amplitude-mode">Amplitude Mode</label>
+                            <select id="audio-amplitude-mode">
+                                <option value="additive" selected>Additive</option>
+                                <option value="threshold">Threshold (0-100%)</option>
+                            </select>
+                        </div>
+                        <div class="control-group audio-controls amplitude-additive-controls">
+                            <label for="audio-amplitude-mult">Multiplier</label>
                             <div class="slider-row">
                                 <input type="range" id="audio-amplitude-mult" min="0" max="2" step="0.1" value="0.5">
                                 <span id="audioAmplitudeMult-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="control-group audio-controls amplitude-threshold-controls">
+                            <label for="audio-amplitude-threshold">Noise Threshold</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-amplitude-threshold" min="0" max="0.5" step="0.01" value="0.05">
+                                <span id="audioAmplitudeThreshold-display" class="slider-value">0.05</span>
+                            </div>
+                        </div>
+                        <div class="control-group audio-controls amplitude-threshold-controls">
+                            <label for="audio-amplitude-min">Min Amplitude (Silence)</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-amplitude-min" min="0" max="3" step="0.05" value="0">
+                                <span id="audioAmplitudeMin-display" class="slider-value">0.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group audio-controls amplitude-threshold-controls">
+                            <label for="audio-amplitude-max">Max Amplitude (Peak)</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-amplitude-max" min="0" max="3" step="0.05" value="1.0">
+                                <span id="audioAmplitudeMax-display" class="slider-value">1.0</span>
                             </div>
                         </div>
                         <div class="checkbox-group audio-controls">

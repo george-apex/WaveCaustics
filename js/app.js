@@ -15,6 +15,7 @@ import { ChromaticAberration } from './effects/chromaticAberration.js';
 import { RainEffect } from './effects/rain.js';
 import { AudioReactive } from './effects/audioReactive.js';
 
+
 export class App {
     constructor() {
         this.state = {
@@ -112,7 +113,8 @@ export class App {
                 varianceGamma: 1.0,
                 chromaticAberration: false,
                 chromaticStrength: 5.0,
-                chromaticRadial: true
+                chromaticRadial: true,
+
             },
             
             interaction: {
@@ -137,7 +139,11 @@ export class App {
                 smoothing: 0.8,
                 amplitudeEnabled: false,
                 amplitudeBand: 'bass',
+                amplitudeMode: 'additive',
                 amplitudeMultiplier: 0.5,
+                amplitudeMinThreshold: 0.05,
+                amplitudeMinValue: 0,
+                amplitudeMaxValue: 1.0,
                 frequencyEnabled: false,
                 frequencyBand: 'mid',
                 frequencyMultiplier: 0.3,
@@ -513,7 +519,9 @@ export class App {
         } else {
             this.volumetricFog.setEnabled(false);
             
-            if (this.state.effects.bloom || this.state.effects.chromaticAberration) {
+            const needsPostProcess = this.state.effects.bloom || this.state.effects.chromaticAberration;
+            
+            if (needsPostProcess) {
                 this.bloomEffect?.resize(this.container.clientWidth, this.container.clientHeight);
                 this.chromaticAberration?.resize(this.container.clientWidth, this.container.clientHeight);
                 
@@ -574,6 +582,14 @@ export class App {
         
         if (this.sceneTarget) {
             this.sceneTarget.setSize(width, height);
+        }
+        
+        if (this.effectTarget) {
+            this.effectTarget.setSize(width, height);
+        }
+        
+        if (this.depthTarget) {
+            this.depthTarget.setSize(width, height);
         }
         
         if (this.fogResultTarget) {
@@ -1092,7 +1108,11 @@ export class App {
         if (settings.smoothing !== undefined) this.state.audio.smoothing = settings.smoothing;
         if (settings.amplitudeEnabled !== undefined) this.state.audio.amplitudeEnabled = settings.amplitudeEnabled;
         if (settings.amplitudeBand !== undefined) this.state.audio.amplitudeBand = settings.amplitudeBand;
+        if (settings.amplitudeMode !== undefined) this.state.audio.amplitudeMode = settings.amplitudeMode;
         if (settings.amplitudeMultiplier !== undefined) this.state.audio.amplitudeMultiplier = settings.amplitudeMultiplier;
+        if (settings.amplitudeMinThreshold !== undefined) this.state.audio.amplitudeMinThreshold = settings.amplitudeMinThreshold;
+        if (settings.amplitudeMinValue !== undefined) this.state.audio.amplitudeMinValue = settings.amplitudeMinValue;
+        if (settings.amplitudeMaxValue !== undefined) this.state.audio.amplitudeMaxValue = settings.amplitudeMaxValue;
         if (settings.frequencyEnabled !== undefined) this.state.audio.frequencyEnabled = settings.frequencyEnabled;
         if (settings.frequencyBand !== undefined) this.state.audio.frequencyBand = settings.frequencyBand;
         if (settings.frequencyMultiplier !== undefined) this.state.audio.frequencyMultiplier = settings.frequencyMultiplier;
@@ -1107,6 +1127,15 @@ export class App {
         
         if (settings.amplitudeEnabled !== undefined || settings.amplitudeBand !== undefined || settings.amplitudeMultiplier !== undefined) {
             this.audioReactive.setTargetParam('amplitude', settings.amplitudeBand, settings.amplitudeMultiplier, settings.amplitudeEnabled);
+        }
+        if (settings.amplitudeMode !== undefined || settings.amplitudeMinThreshold !== undefined || 
+            settings.amplitudeMinValue !== undefined || settings.amplitudeMaxValue !== undefined) {
+            this.audioReactive.setAmplitudeMode(
+                settings.amplitudeMode,
+                settings.amplitudeMinThreshold,
+                settings.amplitudeMinValue,
+                settings.amplitudeMaxValue
+            );
         }
         if (settings.frequencyEnabled !== undefined || settings.frequencyBand !== undefined || settings.frequencyMultiplier !== undefined) {
             this.audioReactive.setTargetParam('frequency', settings.frequencyBand, settings.frequencyMultiplier, settings.frequencyEnabled);

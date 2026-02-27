@@ -56,7 +56,8 @@ export class UI {
             'light3-azimuth', 'light3-color', 'light3-intensity',
             'rain-enabled', 'rain-intensity', 'rain-speed', 'rain-size', 'rain-wind-x', 'rain-wind-z',
             'audio-enabled', 'audio-sensitivity', 'audio-smoothing',
-            'audio-amplitude', 'audio-amplitude-band', 'audio-amplitude-mult',
+            'audio-amplitude', 'audio-amplitude-band', 'audio-amplitude-mode', 'audio-amplitude-mult',
+            'audio-amplitude-threshold', 'audio-amplitude-min', 'audio-amplitude-max',
             'audio-frequency', 'audio-frequency-band', 'audio-frequency-mult',
             'audio-speed', 'audio-speed-band', 'audio-speed-mult'
         ];
@@ -604,6 +605,9 @@ export class UI {
             { id: 'audio-sensitivity', handler: (v) => this.app.setAudioSettings({ sensitivity: v }) },
             { id: 'audio-smoothing', handler: (v) => this.app.setAudioSettings({ smoothing: v }) },
             { id: 'audio-amplitude-mult', handler: (v) => this.app.setAudioSettings({ amplitudeMultiplier: v }) },
+            { id: 'audio-amplitude-threshold', handler: (v) => this.app.setAudioSettings({ amplitudeMinThreshold: v }) },
+            { id: 'audio-amplitude-min', handler: (v) => this.app.setAudioSettings({ amplitudeMinValue: v }) },
+            { id: 'audio-amplitude-max', handler: (v) => this.app.setAudioSettings({ amplitudeMaxValue: v }) },
             { id: 'audio-frequency-mult', handler: (v) => this.app.setAudioSettings({ frequencyMultiplier: v }) },
             { id: 'audio-speed-mult', handler: (v) => this.app.setAudioSettings({ speedMultiplier: v }) }
         ];
@@ -628,6 +632,13 @@ export class UI {
         if (this.elements['audio-amplitude-band']) {
             this.elements['audio-amplitude-band'].addEventListener('change', () => {
                 this.app.setAudioSettings({ amplitudeBand: this.elements['audio-amplitude-band'].value });
+            });
+        }
+        
+        if (this.elements['audio-amplitude-mode']) {
+            this.elements['audio-amplitude-mode'].addEventListener('change', () => {
+                this.app.setAudioSettings({ amplitudeMode: this.elements['audio-amplitude-mode'].value });
+                this.toggleAmplitudeModeControls(this.elements['audio-amplitude-mode'].value);
             });
         }
         
@@ -845,6 +856,9 @@ export class UI {
                 ['audio-sensitivity', state.audio.sensitivity ?? 1.0],
                 ['audio-smoothing', state.audio.smoothing ?? 0.8],
                 ['audio-amplitude-mult', state.audio.amplitudeMultiplier ?? 0.5],
+                ['audio-amplitude-threshold', state.audio.amplitudeMinThreshold ?? 0.05],
+                ['audio-amplitude-min', state.audio.amplitudeMinValue ?? 0],
+                ['audio-amplitude-max', state.audio.amplitudeMaxValue ?? 1.0],
                 ['audio-frequency-mult', state.audio.frequencyMultiplier ?? 0.3],
                 ['audio-speed-mult', state.audio.speedMultiplier ?? 0.2]
             ];
@@ -862,6 +876,10 @@ export class UI {
             }
             if (this.elements['audio-amplitude-band']) {
                 this.elements['audio-amplitude-band'].value = state.audio.amplitudeBand ?? 'bass';
+            }
+            if (this.elements['audio-amplitude-mode']) {
+                this.elements['audio-amplitude-mode'].value = state.audio.amplitudeMode ?? 'additive';
+                this.toggleAmplitudeModeControls(this.elements['audio-amplitude-mode'].value);
             }
             if (this.elements['audio-frequency']) {
                 this.elements['audio-frequency'].checked = state.audio.frequencyEnabled ?? false;
@@ -930,6 +948,18 @@ export class UI {
     toggleAudioControls(show) {
         document.querySelectorAll('.audio-controls').forEach(el => {
             el.classList.toggle('visible', show);
+        });
+        if (show && this.elements['audio-amplitude-mode']) {
+            this.toggleAmplitudeModeControls(this.elements['audio-amplitude-mode'].value);
+        }
+    }
+    
+    toggleAmplitudeModeControls(mode) {
+        document.querySelectorAll('.amplitude-additive-controls').forEach(el => {
+            el.classList.toggle('visible', mode === 'additive');
+        });
+        document.querySelectorAll('.amplitude-threshold-controls').forEach(el => {
+            el.classList.toggle('visible', mode === 'threshold');
         });
     }
     
