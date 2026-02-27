@@ -53,7 +53,12 @@ export class UI {
             'water-video-controls', 'water-video-play', 'water-video-rewind', 'water-video-seek', 'water-video-time',
             'multi-light-enabled', 'multi-light-count',
             'light2-azimuth', 'light2-color', 'light2-intensity',
-            'light3-azimuth', 'light3-color', 'light3-intensity'
+            'light3-azimuth', 'light3-color', 'light3-intensity',
+            'rain-enabled', 'rain-intensity', 'rain-speed', 'rain-size', 'rain-wind-x', 'rain-wind-z',
+            'audio-enabled', 'audio-sensitivity', 'audio-smoothing',
+            'audio-amplitude', 'audio-amplitude-band', 'audio-amplitude-mult',
+            'audio-frequency', 'audio-frequency-band', 'audio-frequency-mult',
+            'audio-speed', 'audio-speed-band', 'audio-speed-mult'
         ];
         
         ids.forEach(id => {
@@ -452,6 +457,32 @@ export class UI {
             });
         }
         
+        if (this.elements['rain-enabled']) {
+            this.elements['rain-enabled'].addEventListener('change', () => {
+                this.app.setRainEnabled(this.elements['rain-enabled'].checked);
+                this.toggleRainControls(this.elements['rain-enabled'].checked);
+            });
+        }
+        
+        const rainSliders = [
+            { id: 'rain-intensity', handler: (v) => this.app.setRainSettings({ intensity: v }) },
+            { id: 'rain-speed', handler: (v) => this.app.setRainSettings({ dropSpeed: v }) },
+            { id: 'rain-size', handler: (v) => this.app.setRainSettings({ dropSize: v }) },
+            { id: 'rain-wind-x', handler: (v) => this.app.setRainSettings({ windX: v }) },
+            { id: 'rain-wind-z', handler: (v) => this.app.setRainSettings({ windZ: v }) }
+        ];
+        
+        rainSliders.forEach(({ id, handler }) => {
+            const el = this.elements[id];
+            if (el) {
+                el.addEventListener('input', () => {
+                    const value = parseFloat(el.value);
+                    handler(value);
+                    this.updateSliderDisplay(id);
+                });
+            }
+        });
+        
         if (this.elements['floor-pattern']) {
             this.elements['floor-pattern'].addEventListener('change', () => {
                 this.app.setFloorPattern(this.elements['floor-pattern'].value);
@@ -561,6 +592,68 @@ export class UI {
                 }
             });
         }
+        
+        if (this.elements['audio-enabled']) {
+            this.elements['audio-enabled'].addEventListener('change', () => {
+                this.app.setAudioEnabled(this.elements['audio-enabled'].checked);
+                this.toggleAudioControls(this.elements['audio-enabled'].checked);
+            });
+        }
+        
+        const audioSliders = [
+            { id: 'audio-sensitivity', handler: (v) => this.app.setAudioSettings({ sensitivity: v }) },
+            { id: 'audio-smoothing', handler: (v) => this.app.setAudioSettings({ smoothing: v }) },
+            { id: 'audio-amplitude-mult', handler: (v) => this.app.setAudioSettings({ amplitudeMultiplier: v }) },
+            { id: 'audio-frequency-mult', handler: (v) => this.app.setAudioSettings({ frequencyMultiplier: v }) },
+            { id: 'audio-speed-mult', handler: (v) => this.app.setAudioSettings({ speedMultiplier: v }) }
+        ];
+        
+        audioSliders.forEach(({ id, handler }) => {
+            const el = this.elements[id];
+            if (el) {
+                el.addEventListener('input', () => {
+                    const value = parseFloat(el.value);
+                    handler(value);
+                    this.updateSliderDisplay(id);
+                });
+            }
+        });
+        
+        if (this.elements['audio-amplitude']) {
+            this.elements['audio-amplitude'].addEventListener('change', () => {
+                this.app.setAudioSettings({ amplitudeEnabled: this.elements['audio-amplitude'].checked });
+            });
+        }
+        
+        if (this.elements['audio-amplitude-band']) {
+            this.elements['audio-amplitude-band'].addEventListener('change', () => {
+                this.app.setAudioSettings({ amplitudeBand: this.elements['audio-amplitude-band'].value });
+            });
+        }
+        
+        if (this.elements['audio-frequency']) {
+            this.elements['audio-frequency'].addEventListener('change', () => {
+                this.app.setAudioSettings({ frequencyEnabled: this.elements['audio-frequency'].checked });
+            });
+        }
+        
+        if (this.elements['audio-frequency-band']) {
+            this.elements['audio-frequency-band'].addEventListener('change', () => {
+                this.app.setAudioSettings({ frequencyBand: this.elements['audio-frequency-band'].value });
+            });
+        }
+        
+        if (this.elements['audio-speed']) {
+            this.elements['audio-speed'].addEventListener('change', () => {
+                this.app.setAudioSettings({ speedEnabled: this.elements['audio-speed'].checked });
+            });
+        }
+        
+        if (this.elements['audio-speed-band']) {
+            this.elements['audio-speed-band'].addEventListener('change', () => {
+                this.app.setAudioSettings({ speedBand: this.elements['audio-speed-band'].value });
+            });
+        }
     }
     
     bindCollapsibleSections() {
@@ -662,7 +755,12 @@ export class UI {
             ['light2-intensity', state.multiLight?.lights?.[1]?.intensity ?? 1.0],
             ['light3-azimuth', state.multiLight?.lights?.[2]?.azimuth ?? 0],
             ['light3-intensity', state.multiLight?.lights?.[2]?.intensity ?? 1.2],
-            ['chromatic-strength', state.effects.chromaticStrength ?? 5.0]
+            ['chromatic-strength', state.effects.chromaticStrength ?? 5.0],
+            ['rain-intensity', state.rain?.intensity ?? 0.5],
+            ['rain-speed', state.rain?.dropSpeed ?? 8.0],
+            ['rain-size', state.rain?.dropSize ?? 0.3],
+            ['rain-wind-x', state.rain?.windX ?? 0],
+            ['rain-wind-z', state.rain?.windZ ?? 0]
         ];
         
         sliderMappings.forEach(([id, value]) => {
@@ -724,7 +822,8 @@ export class UI {
             ['temporal-reprojection', state.effects.temporalReprojection ?? false],
             ['multi-light-enabled', state.multiLight?.enabled ?? false],
             ['chromatic-aberration', state.effects.chromaticAberration ?? false],
-            ['chromatic-radial', state.effects.chromaticRadial ?? true]
+            ['chromatic-radial', state.effects.chromaticRadial ?? true],
+            ['rain-enabled', state.rain?.enabled ?? false]
         ];
         
         checkboxMappings.forEach(([id, value]) => {
@@ -738,6 +837,45 @@ export class UI {
         this.toggleTemporalControls(state.effects.temporalReprojection ?? false);
         this.toggleChromaticControls(state.effects.chromaticAberration ?? false);
         this.toggleMultiLightControls(state.multiLight?.enabled ?? false);
+        this.toggleRainControls(state.rain?.enabled ?? false);
+        this.toggleAudioControls(state.audio?.enabled ?? false);
+        
+        if (state.audio) {
+            const audioSliderMappings = [
+                ['audio-sensitivity', state.audio.sensitivity ?? 1.0],
+                ['audio-smoothing', state.audio.smoothing ?? 0.8],
+                ['audio-amplitude-mult', state.audio.amplitudeMultiplier ?? 0.5],
+                ['audio-frequency-mult', state.audio.frequencyMultiplier ?? 0.3],
+                ['audio-speed-mult', state.audio.speedMultiplier ?? 0.2]
+            ];
+            
+            audioSliderMappings.forEach(([id, value]) => {
+                const el = this.elements[id];
+                if (el) {
+                    el.value = value;
+                    this.updateSliderDisplay(id);
+                }
+            });
+            
+            if (this.elements['audio-amplitude']) {
+                this.elements['audio-amplitude'].checked = state.audio.amplitudeEnabled ?? false;
+            }
+            if (this.elements['audio-amplitude-band']) {
+                this.elements['audio-amplitude-band'].value = state.audio.amplitudeBand ?? 'bass';
+            }
+            if (this.elements['audio-frequency']) {
+                this.elements['audio-frequency'].checked = state.audio.frequencyEnabled ?? false;
+            }
+            if (this.elements['audio-frequency-band']) {
+                this.elements['audio-frequency-band'].value = state.audio.frequencyBand ?? 'mid';
+            }
+            if (this.elements['audio-speed']) {
+                this.elements['audio-speed'].checked = state.audio.speedEnabled ?? false;
+            }
+            if (this.elements['audio-speed-band']) {
+                this.elements['audio-speed-band'].value = state.audio.speedBand ?? 'treble';
+            }
+        }
     }
     
     toggleMultiLightControls(show) {
@@ -779,6 +917,18 @@ export class UI {
     
     toggleChromaticControls(show) {
         document.querySelectorAll('.chromatic-controls').forEach(el => {
+            el.classList.toggle('visible', show);
+        });
+    }
+    
+    toggleRainControls(show) {
+        document.querySelectorAll('.rain-controls').forEach(el => {
+            el.classList.toggle('visible', show);
+        });
+    }
+    
+    toggleAudioControls(show) {
+        document.querySelectorAll('.audio-controls').forEach(el => {
             el.classList.toggle('visible', show);
         });
     }

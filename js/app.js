@@ -12,6 +12,8 @@ import { VolumetricFog } from './volumetricFog.js';
 import { BloomEffect } from './effects/bloom.js';
 import { TemporalReprojection } from './effects/temporalReprojection.js';
 import { ChromaticAberration } from './effects/chromaticAberration.js';
+import { RainEffect } from './effects/rain.js';
+import { AudioReactive } from './effects/audioReactive.js';
 
 export class App {
     constructor() {
@@ -118,6 +120,30 @@ export class App {
                 rippleStrength: 0.5,
                 rippleRadius: 1.0,
                 rippleDecay: 2.0
+            },
+            
+            rain: {
+                enabled: false,
+                intensity: 0.5,
+                dropSpeed: 8.0,
+                dropSize: 0.3,
+                windX: 0,
+                windZ: 0
+            },
+            
+            audio: {
+                enabled: false,
+                sensitivity: 1.0,
+                smoothing: 0.8,
+                amplitudeEnabled: false,
+                amplitudeBand: 'bass',
+                amplitudeMultiplier: 0.5,
+                frequencyEnabled: false,
+                frequencyBand: 'mid',
+                frequencyMultiplier: 0.3,
+                speedEnabled: false,
+                speedBand: 'treble',
+                speedMultiplier: 0.2
             },
             
             debug: {
@@ -357,6 +383,10 @@ export class App {
             radial: this.state.effects.chromaticRadial
         });
         
+        this.rainEffect = new RainEffect(this);
+        
+        this.audioReactive = new AudioReactive(this);
+        
         this.mediaInput = new MediaInput();
     }
     
@@ -392,6 +422,10 @@ export class App {
             this.state.time += delta;
             this.waterSurface.update(this.state.time, this.state.wave);
         }
+        
+        this.rainEffect.update(delta);
+        
+        this.audioReactive.update(delta);
         
         this.mediaInput.update();
         
@@ -1032,5 +1066,53 @@ export class App {
     
     clearRipples() {
         this.interaction.clearRipples();
+    }
+    
+    setRainEnabled(enabled) {
+        this.state.rain.enabled = enabled;
+        this.rainEffect.setEnabled(enabled);
+    }
+    
+    setRainSettings(settings) {
+        if (settings.intensity !== undefined) this.state.rain.intensity = settings.intensity;
+        if (settings.dropSpeed !== undefined) this.state.rain.dropSpeed = settings.dropSpeed;
+        if (settings.dropSize !== undefined) this.state.rain.dropSize = settings.dropSize;
+        if (settings.windX !== undefined) this.state.rain.windX = settings.windX;
+        if (settings.windZ !== undefined) this.state.rain.windZ = settings.windZ;
+        this.rainEffect.setSettings(settings);
+    }
+    
+    async setAudioEnabled(enabled) {
+        this.state.audio.enabled = enabled;
+        await this.audioReactive.setEnabled(enabled);
+    }
+    
+    setAudioSettings(settings) {
+        if (settings.sensitivity !== undefined) this.state.audio.sensitivity = settings.sensitivity;
+        if (settings.smoothing !== undefined) this.state.audio.smoothing = settings.smoothing;
+        if (settings.amplitudeEnabled !== undefined) this.state.audio.amplitudeEnabled = settings.amplitudeEnabled;
+        if (settings.amplitudeBand !== undefined) this.state.audio.amplitudeBand = settings.amplitudeBand;
+        if (settings.amplitudeMultiplier !== undefined) this.state.audio.amplitudeMultiplier = settings.amplitudeMultiplier;
+        if (settings.frequencyEnabled !== undefined) this.state.audio.frequencyEnabled = settings.frequencyEnabled;
+        if (settings.frequencyBand !== undefined) this.state.audio.frequencyBand = settings.frequencyBand;
+        if (settings.frequencyMultiplier !== undefined) this.state.audio.frequencyMultiplier = settings.frequencyMultiplier;
+        if (settings.speedEnabled !== undefined) this.state.audio.speedEnabled = settings.speedEnabled;
+        if (settings.speedBand !== undefined) this.state.audio.speedBand = settings.speedBand;
+        if (settings.speedMultiplier !== undefined) this.state.audio.speedMultiplier = settings.speedMultiplier;
+        
+        this.audioReactive.setSettings({
+            sensitivity: settings.sensitivity,
+            smoothing: settings.smoothing
+        });
+        
+        if (settings.amplitudeEnabled !== undefined || settings.amplitudeBand !== undefined || settings.amplitudeMultiplier !== undefined) {
+            this.audioReactive.setTargetParam('amplitude', settings.amplitudeBand, settings.amplitudeMultiplier, settings.amplitudeEnabled);
+        }
+        if (settings.frequencyEnabled !== undefined || settings.frequencyBand !== undefined || settings.frequencyMultiplier !== undefined) {
+            this.audioReactive.setTargetParam('frequency', settings.frequencyBand, settings.frequencyMultiplier, settings.frequencyEnabled);
+        }
+        if (settings.speedEnabled !== undefined || settings.speedBand !== undefined || settings.speedMultiplier !== undefined) {
+            this.audioReactive.setTargetParam('speed', settings.speedBand, settings.speedMultiplier, settings.speedEnabled);
+        }
     }
 }

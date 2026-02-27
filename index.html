@@ -542,6 +542,117 @@
                         <div class="checkbox-group chromatic-controls">
                             <label><input type="checkbox" id="chromatic-radial" checked> Radial Aberration</label>
                         </div>
+                        
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="rain-enabled"> Rain Effect</label>
+                        </div>
+                        <div class="control-group rain-controls">
+                            <label for="rain-intensity">Intensity</label>
+                            <div class="slider-row">
+                                <input type="range" id="rain-intensity" min="0.1" max="2" step="0.1" value="0.5">
+                                <span id="rainIntensity-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="control-group rain-controls">
+                            <label for="rain-speed">Drop Speed</label>
+                            <div class="slider-row">
+                                <input type="range" id="rain-speed" min="2" max="20" step="0.5" value="8.0">
+                                <span id="rainSpeed-display" class="slider-value">8.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group rain-controls">
+                            <label for="rain-size">Drop Size</label>
+                            <div class="slider-row">
+                                <input type="range" id="rain-size" min="0.1" max="1" step="0.05" value="0.3">
+                                <span id="rainSize-display" class="slider-value">0.3</span>
+                            </div>
+                        </div>
+                        <div class="control-group rain-controls">
+                            <label for="rain-wind-x">Wind X</label>
+                            <div class="slider-row">
+                                <input type="range" id="rain-wind-x" min="-5" max="5" step="0.5" value="0">
+                                <span id="rainWindX-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="control-group rain-controls">
+                            <label for="rain-wind-z">Wind Z</label>
+                            <div class="slider-row">
+                                <input type="range" id="rain-wind-z" min="-5" max="5" step="0.5" value="0">
+                                <span id="rainWindZ-display" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="audio-enabled"> Audio Reactive</label>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-sensitivity">Sensitivity</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-sensitivity" min="0.1" max="3" step="0.1" value="1.0">
+                                <span id="audioSensitivity-display" class="slider-value">1.0</span>
+                            </div>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-smoothing">Smoothing</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-smoothing" min="0" max="0.95" step="0.05" value="0.8">
+                                <span id="audioSmoothing-display" class="slider-value">0.8</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group audio-controls">
+                            <label><input type="checkbox" id="audio-amplitude"> Modulate Amplitude</label>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-amplitude-band">Amplitude Band</label>
+                            <select id="audio-amplitude-band">
+                                <option value="bass" selected>Bass</option>
+                                <option value="mid">Mid</option>
+                                <option value="treble">Treble</option>
+                            </select>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-amplitude-mult">Amplitude Multiplier</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-amplitude-mult" min="0" max="2" step="0.1" value="0.5">
+                                <span id="audioAmplitudeMult-display" class="slider-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group audio-controls">
+                            <label><input type="checkbox" id="audio-frequency"> Modulate Frequency</label>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-frequency-band">Frequency Band</label>
+                            <select id="audio-frequency-band">
+                                <option value="bass">Bass</option>
+                                <option value="mid" selected>Mid</option>
+                                <option value="treble">Treble</option>
+                            </select>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-frequency-mult">Frequency Multiplier</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-frequency-mult" min="0" max="2" step="0.1" value="0.3">
+                                <span id="audioFrequencyMult-display" class="slider-value">0.3</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group audio-controls">
+                            <label><input type="checkbox" id="audio-speed"> Modulate Speed</label>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-speed-band">Speed Band</label>
+                            <select id="audio-speed-band">
+                                <option value="bass">Bass</option>
+                                <option value="mid">Mid</option>
+                                <option value="treble" selected>Treble</option>
+                            </select>
+                        </div>
+                        <div class="control-group audio-controls">
+                            <label for="audio-speed-mult">Speed Multiplier</label>
+                            <div class="slider-row">
+                                <input type="range" id="audio-speed-mult" min="0" max="2" step="0.1" value="0.2">
+                                <span id="audioSpeedMult-display" class="slider-value">0.2</span>
+                            </div>
+                        </div>
                     </div>
                 </section>
 

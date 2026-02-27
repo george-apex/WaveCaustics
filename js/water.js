@@ -780,4 +780,16 @@ export class WaterSurface {
                 this.material.uniforms[`uLayer${layerIndex}Direction`].value = params.direction;
         }
     }
+    
+    setAmplitude(value) {
+        this.material.uniforms.uAmplitude.value = value;
+    }
+    
+    setFrequency(value) {
+        this.material.uniforms.uFrequency.value = value;
+    }
+    
+    setSpeed(value) {
+        this.material.uniforms.uSpeed.value = value;
+    }
 }
