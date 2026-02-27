@@ -297,7 +297,7 @@ const volumetricFogFragmentShader = `
             if (transmittance < 0.01) break;
         }
         
-        vec3 fogTint = vec3(0.75, 0.88, 1.0);
+        vec3 fogTint = vec3(0.9, 0.95, 1.0);
         fogColor *= fogTint;
         
         vec3 finalColor = sceneColor.rgb * transmittance + fogColor;

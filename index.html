@@ -528,6 +528,20 @@
                                 <span id="varianceGamma-display" class="slider-value">1.0</span>
                             </div>
                         </div>
+                        
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="chromatic-aberration"> Chromatic Aberration</label>
+                        </div>
+                        <div class="control-group chromatic-controls">
+                            <label for="chromatic-strength">Strength</label>
+                            <div class="slider-row">
+                                <input type="range" id="chromatic-strength" min="0" max="20" step="0.5" value="5.0">
+                                <span id="chromaticStrength-display" class="slider-value">5.0</span>
+                            </div>
+                        </div>
+                        <div class="checkbox-group chromatic-controls">
+                            <label><input type="checkbox" id="chromatic-radial" checked> Radial Aberration</label>
+                        </div>
                     </div>
                 </section>
 
@@ -662,12 +676,32 @@
                     <div class="section-content">
                         <select id="preset-select">
                             <option value="">Select Preset...</option>
-                            <option value="pool">Swimming Pool</option>
-                            <option value="ocean">Ocean Waves</option>
-                            <option value="glass">Glass Panel</option>
-                            <option value="diamond">Diamond Prism</option>
-                            <option value="sunset">Sunset Glow</option>
-                            <option value="video-test">Video Test</option>
+                            <optgroup label="Classic">
+                                <option value="pool">Swimming Pool</option>
+                                <option value="ocean">Ocean Waves</option>
+                                <option value="glass">Glass Panel</option>
+                                <option value="diamond">Diamond Prism</option>
+                            </optgroup>
+                            <optgroup label="Atmospheric">
+                                <option value="sunset">Sunset Glow</option>
+                                <option value="aurora">Aurora</option>
+                                <option value="stormy">Stormy Seas</option>
+                                <option value="deep-sea">Deep Sea</option>
+                            </optgroup>
+                            <optgroup label="Creative">
+                                <option value="neon-pool">Neon Pool</option>
+                                <option value="bioluminescence">Bioluminescence</option>
+                                <option value="prism">Prism</option>
+                                <option value="lava-lamp">Lava Lamp</option>
+                            </optgroup>
+                            <optgroup label="Relaxing">
+                                <option value="tropical-lagoon">Tropical Lagoon</option>
+                                <option value="zen-garden">Zen Garden</option>
+                                <option value="pool-party">Pool Party</option>
+                            </optgroup>
+                            <optgroup label="Demo">
+                                <option value="video-test">Video Test</option>
+                            </optgroup>
                         </select>
                     </div>
                 </section>

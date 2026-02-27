@@ -52,7 +52,7 @@ const blurFragmentShader = `
     varying vec2 vUv;
     
     void main() {
-        vec2 texelSize = 1.0 / uResolution;
+        vec2 texelSize = vec2(1.0) / uResolution;
         vec3 result = vec3(0.0);
         
         float weights[5];

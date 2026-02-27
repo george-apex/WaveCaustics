@@ -15,42 +15,37 @@ const motionFragmentShader = `
     uniform mat4 uPrevViewProjection;
     uniform mat4 uCurrViewProjection;
     uniform mat4 uInverseView;
+    uniform mat4 uInverseProjection;
     uniform float uNear;
     uniform float uFar;
     
     varying vec2 vUv;
     
-    float getLinearDepth(float rawDepth) {
-        float z = rawDepth * 2.0 - 1.0;
-        return (2.0 * uNear * uFar) / (uFar + uNear - z * (uFar - uNear));
-    }
-    
-    vec3 getWorldPos(vec2 uv, float depth) {
-        float z = depth * 2.0 - 1.0;
-        vec4 clipPos = vec4(uv * 2.0 - 1.0, z, 1.0);
-        vec4 viewPos = uInverseView * clipPos;
-        return viewPos.xyz / viewPos.w;
+    float getLinearDepth(float depth) {
+        return (2.0 * uNear) / (uFar + uNear - depth * (uFar - uNear));
     }
     
     void main() {
-        float rawDepth = texture2D(tDepth, vUv).r;
+        float depth = texture2D(tDepth, vUv).r;
         
-        if (rawDepth >= 0.999) {
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        if (depth >= 1.0) {
+            gl_FragColor = vec4(0.5, 0.5, 0.0, 1.0);
             return;
         }
         
-        vec3 worldPos = getWorldPos(vUv, rawDepth);
+        vec4 clipPos = vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+        vec4 viewPos = uInverseProjection * clipPos;
+        viewPos /= viewPos.w;
         
-        vec4 currPos = uCurrViewProjection * vec4(worldPos, 1.0);
-        vec4 prevPos = uPrevViewProjection * vec4(worldPos, 1.0);
+        vec4 worldPos = uInverseView * viewPos;
         
-        currPos.xyz /= currPos.w;
-        prevPos.xyz /= prevPos.w;
+        vec4 prevClipPos = uPrevViewProjection * worldPos;
+        prevClipPos /= prevClipPos.w;
         
-        vec2 motion = (currPos.xy - prevPos.xy) * 0.5;
+        vec2 prevUv = prevClipPos.xy * 0.5 + 0.5;
+        vec2 motion = prevUv - vUv;
         
-        gl_FragColor = vec4(motion, 0.0, 1.0);
+        gl_FragColor = vec4(motion * 0.5 + 0.5, 0.0, 1.0);
     }
 `;
 
@@ -77,46 +72,40 @@ const temporalFragmentShader = `
     
     varying vec2 vUv;
     
+    vec3 sampleClamped(sampler2D tex, vec2 uv) {
+        return texture2D(tex, clamp(uv, 0.0, 1.0)).rgb;
+    }
+    
     void main() {
-        vec2 uv = vUv;
+        vec3 currentColor = texture2D(tCurrentFog, vUv).rgb;
         
-        vec3 currentFog = texture2D(tCurrentFog, uv).rgb;
+        vec2 motion = texture2D(tMotionVectors, vUv).rg * 2.0 - 1.0;
+        vec2 prevUv = vUv + motion;
         
-        vec2 motion = texture2D(tMotionVectors, uv).rg;
-        vec2 prevUv = uv - motion;
+        if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+            gl_FragColor = vec4(currentColor, 1.0);
+            return;
+        }
         
-        float validHistory = step(0.0, prevUv.x) * step(prevUv.x, 1.0) *
-                             step(0.0, prevUv.y) * step(prevUv.y, 1.0);
+        vec3 historyColor = sampleClamped(tHistoryFog, prevUv);
         
-        vec3 historyFog = texture2D(tHistoryFog, clamp(prevUv, 0.001, 0.999), 0.0).rgb;
-        
-        vec3 minColor = vec3(1e6);
-        vec3 maxColor = vec3(-1e6);
-        vec3 mean = vec3(0.0);
-        vec3 variance = vec3(0.0);
+        vec3 neighborMin = currentColor;
+        vec3 neighborMax = currentColor;
         
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
+                if (x == 0 && y == 0) continue;
                 vec2 offset = vec2(float(x), float(y)) * uTexelSize;
-                vec3 sample = texture2D(tCurrentFog, uv + offset).rgb;
-                minColor = min(minColor, sample);
-                maxColor = max(maxColor, sample);
-                mean += sample;
-                variance += sample * sample;
+                vec3 neighborColor = sampleClamped(tCurrentFog, vUv + offset);
+                neighborMin = min(neighborMin, neighborColor);
+                neighborMax = max(neighborMax, neighborColor);
             }
         }
         
-        mean /= 9.0;
-        variance = variance / 9.0 - mean * mean;
+        historyColor = clamp(historyColor, neighborMin, neighborMax);
         
-        vec3 stdDev = sqrt(max(variance, 0.0));
-        vec3 boxMin = mean - uVarianceGamma * stdDev;
-        vec3 boxMax = mean + uVarianceGamma * stdDev;
-        
-        historyFog = clamp(historyFog, max(minColor, boxMin), min(maxColor, boxMax));
-        
-        float feedback = mix(uFeedbackMin, uFeedbackMax, validHistory);
-        vec3 result = mix(historyFog, currentFog, 1.0 - feedback);
+        float feedback = mix(uFeedbackMin, uFeedbackMax, 0.5);
+        vec3 result = mix(currentColor, historyColor, feedback);
         
         gl_FragColor = vec4(result, 1.0);
     }
@@ -174,6 +163,7 @@ export class TemporalReprojection {
                 uPrevViewProjection: { value: new THREE.Matrix4() },
                 uCurrViewProjection: { value: new THREE.Matrix4() },
                 uInverseView: { value: new THREE.Matrix4() },
+                uInverseProjection: { value: new THREE.Matrix4() },
                 uNear: { value: 0.1 },
                 uFar: { value: 100 }
             },
@@ -195,6 +185,26 @@ export class TemporalReprojection {
             },
             vertexShader: temporalVertexShader,
             fragmentShader: temporalFragmentShader
+        });
+        
+        this.blitMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                tInput: { value: null }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tInput;
+                varying vec2 vUv;
+                void main() {
+                    gl_FragColor = texture2D(tInput, vUv);
+                }
+            `
         });
     }
     
@@ -250,6 +260,7 @@ export class TemporalReprojection {
         this.motionMaterial.uniforms.uPrevViewProjection.value.copy(this.prevViewProjection);
         this.motionMaterial.uniforms.uCurrViewProjection.value.copy(this.currViewProjection);
         this.motionMaterial.uniforms.uInverseView.value.copy(camera.matrixWorld);
+        this.motionMaterial.uniforms.uInverseProjection.value.copy(camera.projectionMatrixInverse);
         this.motionMaterial.uniforms.uNear.value = camera.near;
         this.motionMaterial.uniforms.uFar.value = camera.far;
         
@@ -271,46 +282,33 @@ export class TemporalReprojection {
         
         this.computeMotionVectors(depthTexture, camera);
         
-        const historyIndex = this.currentHistoryIndex;
-        const historyTarget = this.historyTargets[historyIndex];
+        const historyTarget = this.historyTargets[this.currentHistoryIndex];
         
-        if (this.firstFrame) {
-            this.fullscreenQuad.material = this.temporalMaterial;
-            this.temporalMaterial.uniforms.tCurrentFog.value = currentFogTexture;
-            this.temporalMaterial.uniforms.tHistoryFog.value = currentFogTexture;
-            this.temporalMaterial.uniforms.tMotionVectors.value = this.motionTarget.texture;
-            this.temporalMaterial.uniforms.tDepth.value = depthTexture;
-            this.temporalMaterial.uniforms.uTexelSize.value.set(1 / this.width, 1 / this.height);
-            
-            this.renderer.setRenderTarget(historyTarget);
-            this.renderer.render(this.orthoScene, this.orthoCamera);
-            
-            this.firstFrame = false;
-        } else {
-            const prevHistoryIndex = 1 - historyIndex;
-            const prevHistoryTarget = this.historyTargets[prevHistoryIndex];
-            
-            this.fullscreenQuad.material = this.temporalMaterial;
-            this.temporalMaterial.uniforms.tCurrentFog.value = currentFogTexture;
-            this.temporalMaterial.uniforms.tHistoryFog.value = prevHistoryTarget.texture;
-            this.temporalMaterial.uniforms.tMotionVectors.value = this.motionTarget.texture;
-            this.temporalMaterial.uniforms.tDepth.value = depthTexture;
-            this.temporalMaterial.uniforms.uTexelSize.value.set(1 / this.width, 1 / this.height);
-            
-            this.renderer.setRenderTarget(historyTarget);
-            this.renderer.render(this.orthoScene, this.orthoCamera);
-        }
-        
-        this.prevViewProjection.copy(this.currViewProjection);
-        this.currentHistoryIndex = 1 - this.currentHistoryIndex;
-        
-        this.renderer.setRenderTarget(outputTarget);
         this.fullscreenQuad.material = this.temporalMaterial;
         this.temporalMaterial.uniforms.tCurrentFog.value = currentFogTexture;
-        this.temporalMaterial.uniforms.tHistoryFog.value = historyTarget.texture;
+        this.temporalMaterial.uniforms.tHistoryFog.value = this.firstFrame ? currentFogTexture : historyTarget.texture;
+        this.temporalMaterial.uniforms.tMotionVectors.value = this.motionTarget.texture;
+        this.temporalMaterial.uniforms.tDepth.value = depthTexture;
+        this.temporalMaterial.uniforms.uTexelSize.value.set(1 / this.width, 1 / this.height);
+        
+        const nextHistoryIndex = 1 - this.currentHistoryIndex;
+        const nextHistoryTarget = this.historyTargets[nextHistoryIndex];
+        
+        this.renderer.setRenderTarget(nextHistoryTarget);
+        this.renderer.clear(true, true, false);
         this.renderer.render(this.orthoScene, this.orthoCamera);
         
-        return historyTarget.texture;
+        this.renderer.setRenderTarget(outputTarget);
+        this.renderer.clear(true, true, false);
+        this.fullscreenQuad.material = this.blitMaterial;
+        this.blitMaterial.uniforms.tInput.value = nextHistoryTarget.texture;
+        this.renderer.render(this.orthoScene, this.orthoCamera);
+        
+        this.currentHistoryIndex = nextHistoryIndex;
+        this.prevViewProjection.copy(this.currViewProjection);
+        this.firstFrame = false;
+        
+        return nextHistoryTarget.texture;
     }
     
     setEnabled(enabled) {
@@ -348,6 +346,7 @@ export class TemporalReprojection {
         this.disposeTargets();
         this.motionMaterial?.dispose();
         this.temporalMaterial?.dispose();
+        this.blitMaterial?.dispose();
         this.fullscreenQuad?.geometry.dispose();
     }
 }

@@ -11,6 +11,7 @@ import { Shortcuts } from './shortcuts.js';
 import { VolumetricFog } from './volumetricFog.js';
 import { BloomEffect } from './effects/bloom.js';
 import { TemporalReprojection } from './effects/temporalReprojection.js';
+import { ChromaticAberration } from './effects/chromaticAberration.js';
 
 export class App {
     constructor() {
@@ -106,7 +107,10 @@ export class App {
                 temporalBlend: 0.1,
                 feedbackMin: 0.9,
                 feedbackMax: 0.95,
-                varianceGamma: 1.0
+                varianceGamma: 1.0,
+                chromaticAberration: false,
+                chromaticStrength: 5.0,
+                chromaticRadial: true
             },
             
             interaction: {
@@ -181,6 +185,73 @@ export class App {
                 light: { azimuth: 45, elevation: 60, intensity: 1.5, color: '#FFFFFF' },
                 material: { ior: 1.33, dispersion: 0, clarity: 0.8 },
                 display: { showWalls: false, showFloor: false, waterResolution: 256 }
+            },
+            'neon-pool': {
+                scene: { depth: 2, poolSize: 10, floorColor: '#0a0a1a', waterColor: '#00ffff' },
+                wave: { amplitude: 0.2, frequency: 3.0, speed: 0.7, type: 'perlin' },
+                light: { azimuth: 0, elevation: 70, intensity: 2.0, color: '#ff00ff' },
+                material: { ior: 1.33, dispersion: 0.03, clarity: 0.9 },
+                effects: { bloom: true, bloomIntensity: 1.2, bloomThreshold: 0.4, chromaticAberration: true, chromaticStrength: 8 }
+            },
+            'tropical-lagoon': {
+                scene: { depth: 1.5, poolSize: 20, floorColor: '#f5e6d3', waterColor: '#40e0d0' },
+                wave: { amplitude: 0.15, frequency: 1.5, speed: 0.5, type: 'gerstner' },
+                light: { azimuth: 90, elevation: 75, intensity: 2.5, color: '#FFFACD' },
+                material: { ior: 1.33, dispersion: 0, clarity: 0.95 }
+            },
+            'bioluminescence': {
+                scene: { depth: 3, poolSize: 12, floorColor: '#050510', waterColor: '#001a33' },
+                wave: { amplitude: 0.3, frequency: 2.0, speed: 0.6, type: 'perlin', useHeightGradient: true, waterColorLow: '#000814', waterColorHigh: '#00ff88' },
+                light: { azimuth: 180, elevation: 30, intensity: 0.5, color: '#4488ff' },
+                material: { ior: 1.33, dispersion: 0, clarity: 0.7 },
+                effects: { bloom: true, bloomIntensity: 1.5, bloomThreshold: 0.2 }
+            },
+            'prism': {
+                scene: { depth: 0.3, poolSize: 6, floorColor: '#ffffff', waterColor: '#ffffff' },
+                wave: { amplitude: 0.05, frequency: 5.0, speed: 0.2, type: 'sine' },
+                light: { azimuth: 45, elevation: 60, intensity: 3.0, color: '#FFFFFF' },
+                material: { ior: 2.4, dispersion: 0.15, clarity: 1.0 },
+                effects: { chromaticAberration: true, chromaticStrength: 12 }
+            },
+            'stormy': {
+                scene: { depth: 4, poolSize: 25, floorColor: '#1a1a2e', waterColor: '#2d4a6e' },
+                wave: { amplitude: 0.8, frequency: 1.2, speed: 2.0, type: 'gerstner' },
+                light: { azimuth: 200, elevation: 20, intensity: 1.0, color: '#8899aa' },
+                material: { ior: 1.33, dispersion: 0, clarity: 0.6 },
+                effects: { fog: true, fogDensity: 0.6, fogScattering: 0.8 }
+            },
+            'zen-garden': {
+                scene: { depth: 0.5, poolSize: 8, floorColor: '#d4c4a8', waterColor: '#8899aa' },
+                wave: { amplitude: 0.05, frequency: 4.0, speed: 0.3, type: 'ripple' },
+                light: { azimuth: 135, elevation: 50, intensity: 1.2, color: '#FFF8E7' },
+                material: { ior: 1.33, dispersion: 0, clarity: 0.98 }
+            },
+            'lava-lamp': {
+                scene: { depth: 2, poolSize: 8, floorColor: '#1a0a0a', waterColor: '#ff4400' },
+                wave: { amplitude: 0.4, frequency: 0.8, speed: 0.4, type: 'perlin', useHeightGradient: true, waterColorLow: '#ff2200', waterColorHigh: '#ffcc00' },
+                light: { azimuth: 0, elevation: 90, intensity: 2.0, color: '#ff6600' },
+                material: { ior: 1.5, dispersion: 0.02, clarity: 0.8 },
+                effects: { bloom: true, bloomIntensity: 1.0, bloomThreshold: 0.3 }
+            },
+            'aurora': {
+                scene: { depth: 2, poolSize: 15, floorColor: '#0a0a1a', waterColor: '#1a3a5c' },
+                wave: { amplitude: 0.25, frequency: 1.0, speed: 0.3, type: 'perlin', useHeightGradient: true, waterColorLow: '#0a1a2a', waterColorHigh: '#00ff88' },
+                light: { azimuth: 0, elevation: 45, intensity: 1.5, color: '#88ffaa' },
+                material: { ior: 1.33, dispersion: 0.05, clarity: 0.85 },
+                effects: { bloom: true, bloomIntensity: 0.8, chromaticAberration: true, chromaticStrength: 6 }
+            },
+            'pool-party': {
+                scene: { depth: 1.8, poolSize: 12, floorColor: '#4a90a4', waterColor: '#00bfff' },
+                wave: { amplitude: 0.35, frequency: 2.5, speed: 1.0, type: 'gerstner' },
+                light: { azimuth: 60, elevation: 70, intensity: 2.5, color: '#FFFFFF' },
+                material: { ior: 1.33, dispersion: 0, clarity: 0.9 }
+            },
+            'deep-sea': {
+                scene: { depth: 5, poolSize: 20, floorColor: '#020810', waterColor: '#0a1a2a' },
+                wave: { amplitude: 0.6, frequency: 0.8, speed: 0.5, type: 'perlin' },
+                light: { azimuth: 0, elevation: 90, intensity: 0.3, color: '#4488aa' },
+                material: { ior: 1.33, dispersion: 0, clarity: 0.4 },
+                effects: { fog: true, fogDensity: 0.8, fogScattering: 0.6 }
             }
         };
     }
@@ -279,6 +350,11 @@ export class App {
             feedbackMin: this.state.effects.feedbackMin,
             feedbackMax: this.state.effects.feedbackMax,
             varianceGamma: this.state.effects.varianceGamma
+        });
+        
+        this.chromaticAberration = new ChromaticAberration(this.renderer, {
+            strength: this.state.effects.chromaticStrength,
+            radial: this.state.effects.chromaticRadial
         });
         
         this.mediaInput = new MediaInput();
@@ -403,9 +479,9 @@ export class App {
         } else {
             this.volumetricFog.setEnabled(false);
             
-            if (this.state.effects.bloom) {
-                this.bloomEffect.resize(this.container.clientWidth, this.container.clientHeight);
-                this.bloomEffect.setEnabled(true);
+            if (this.state.effects.bloom || this.state.effects.chromaticAberration) {
+                this.bloomEffect?.resize(this.container.clientWidth, this.container.clientHeight);
+                this.chromaticAberration?.resize(this.container.clientWidth, this.container.clientHeight);
                 
                 if (!this.sceneTarget) {
                     this.sceneTarget = new THREE.WebGLRenderTarget(
@@ -415,11 +491,34 @@ export class App {
                     );
                 }
                 
+                if (!this.effectTarget) {
+                    this.effectTarget = new THREE.WebGLRenderTarget(
+                        this.container.clientWidth,
+                        this.container.clientHeight,
+                        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: THREE.HalfFloatType }
+                    );
+                }
+                
                 this.renderer.setRenderTarget(this.sceneTarget);
                 this.renderer.render(this.scene, this.camera);
-                this.renderer.setRenderTarget(null);
                 
-                this.bloomEffect.render(this.sceneTarget.texture, null);
+                let currentTexture = this.sceneTarget.texture;
+                
+                if (this.state.effects.bloom) {
+                    this.bloomEffect.setEnabled(true);
+                    this.bloomEffect.render(currentTexture, this.effectTarget);
+                    currentTexture = this.effectTarget.texture;
+                } else {
+                    this.bloomEffect.setEnabled(false);
+                }
+                
+                if (this.state.effects.chromaticAberration) {
+                    this.chromaticAberration.setEnabled(true);
+                    this.chromaticAberration.render(currentTexture, null);
+                } else {
+                    this.chromaticAberration.setEnabled(false);
+                    this.chromaticAberration.render(currentTexture, null);
+                }
             } else {
                 this.renderer.render(this.scene, this.camera);
             }
@@ -437,6 +536,7 @@ export class App {
         this.volumetricFog?.resize(width, height);
         this.bloomEffect?.resize(width, height);
         this.temporalReprojection?.resize(width, height);
+        this.chromaticAberration?.resize(width, height);
         
         if (this.sceneTarget) {
             this.sceneTarget.setSize(width, height);
@@ -489,6 +589,21 @@ export class App {
         const preset = this.presets[name];
         if (!preset) return;
         
+        this.state.scene = { depth: 2, poolSize: 10, floorColor: '#1a1a2e', waterColor: '#4488aa' };
+        this.state.wave = { amplitude: 0.3, frequency: 2.0, speed: 1.0, type: 'perlin', direction: 0, edgeDamping: 0, layerCount: 1, opacity: 0.8, useHeightGradient: false, waterColorLow: '#1a3a5c', waterColorHigh: '#88ccff' };
+        this.state.light = { azimuth: 45, elevation: 60, intensity: 1.5, color: '#FFFFFF', type: 'directional', pointPosition: { x: 0, y: 5, z: 0 }, pointRadius: 10, animate: false, animationSpeed: 1.0, animationType: 'orbit', causticsTint: '#FFFFFF', causticsTintStrength: 0 };
+        this.state.material = { ior: 1.33, dispersion: 0, clarity: 0.8 };
+        this.state.display = { showWater: true, showFloor: true, showLightHelper: false, wireframe: false, waterResolution: 128, causticsResolution: 256, backgroundColor: '#b5b5b5', showWalls: true };
+        this.state.effects = { godRays: false, godRaysIntensity: 0.5, godRaysDecay: 0.95, godRaysSamples: 50, fog: false, fogDensity: 1.0, fogScattering: 1.0, fogAnisotropy: 0.3, fogSteps: 32, lightRays: false, lightRayIntensity: 1.0, bloom: false, bloomIntensity: 0.5, bloomThreshold: 0.8, bloomSoftKnee: 0.2, bloomRadius: 1.0, temporalReprojection: false, temporalBlend: 0.1, feedbackMin: 0.9, feedbackMax: 0.95, varianceGamma: 1.0, chromaticAberration: false, chromaticStrength: 5.0, chromaticRadial: true };
+        
+        this.setBloom(false);
+        this.setChromaticAberration(false);
+        this.setFog(false);
+        this.floorPlane?.setWallsVisible(true);
+        this.floorPlane?.setVisible(true);
+        this.setWaterResolution(128);
+        this.scene.background = new THREE.Color('#b5b5b5');
+        
         Object.assign(this.state.scene, preset.scene);
         Object.assign(this.state.wave, preset.wave);
         Object.assign(this.state.light, preset.light);
@@ -504,6 +619,21 @@ export class App {
             }
             if (preset.display.waterResolution !== undefined) {
                 this.setWaterResolution(preset.display.waterResolution);
+            }
+        }
+        
+        if (preset.effects) {
+            Object.assign(this.state.effects, preset.effects);
+            if (preset.effects.bloom !== undefined) {
+                this.setBloom(preset.effects.bloom, preset.effects.bloomIntensity, preset.effects.bloomThreshold, preset.effects.bloomSoftKnee, preset.effects.bloomRadius);
+            }
+            if (preset.effects.chromaticAberration !== undefined) {
+                this.setChromaticAberration(preset.effects.chromaticAberration, preset.effects.chromaticStrength, preset.effects.chromaticRadial);
+            }
+            if (preset.effects.fog !== undefined) {
+                this.setFog(preset.effects.fog);
+                if (preset.effects.fogDensity) this.setFogDensity(preset.effects.fogDensity);
+                if (preset.effects.fogScattering) this.setFogScattering(preset.effects.fogScattering);
             }
         }
         
@@ -829,6 +959,19 @@ export class App {
         if (enabled) {
             this.temporalReprojection?.reset();
         }
+    }
+    
+    setChromaticAberration(enabled, strength, radial) {
+        this.state.effects.chromaticAberration = enabled;
+        if (strength !== undefined) {
+            this.state.effects.chromaticStrength = strength;
+            this.chromaticAberration?.setStrength(strength);
+        }
+        if (radial !== undefined) {
+            this.state.effects.chromaticRadial = radial;
+            this.chromaticAberration?.setRadial(radial);
+        }
+        this.chromaticAberration?.setEnabled(enabled);
     }
     
     setWaveDirection(direction) {

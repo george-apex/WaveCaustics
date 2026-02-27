@@ -49,6 +49,7 @@ export class UI {
             'light-rays', 'light-ray-intensity',
             'bloom', 'bloom-intensity', 'bloom-threshold', 'bloom-soft-knee', 'bloom-radius',
             'temporal-reprojection', 'temporal-blend', 'feedback-min', 'feedback-max', 'variance-gamma',
+            'chromatic-aberration', 'chromatic-strength', 'chromatic-radial',
             'water-video-controls', 'water-video-play', 'water-video-rewind', 'water-video-seek', 'water-video-time',
             'multi-light-enabled', 'multi-light-count',
             'light2-azimuth', 'light2-color', 'light2-intensity',
@@ -426,6 +427,31 @@ export class UI {
             }
         });
         
+        if (this.elements['chromatic-aberration']) {
+            this.elements['chromatic-aberration'].addEventListener('change', () => {
+                this.app.setChromaticAberration(this.elements['chromatic-aberration'].checked);
+                this.toggleChromaticControls(this.elements['chromatic-aberration'].checked);
+            });
+        }
+        
+        if (this.elements['chromatic-strength']) {
+            this.elements['chromatic-strength'].addEventListener('input', () => {
+                const value = parseFloat(this.elements['chromatic-strength'].value);
+                this.app.setChromaticAberration(this.app.state.effects.chromaticAberration, value);
+                this.updateSliderDisplay('chromatic-strength');
+            });
+        }
+        
+        if (this.elements['chromatic-radial']) {
+            this.elements['chromatic-radial'].addEventListener('change', () => {
+                this.app.setChromaticAberration(
+                    this.app.state.effects.chromaticAberration,
+                    undefined,
+                    this.elements['chromatic-radial'].checked
+                );
+            });
+        }
+        
         if (this.elements['floor-pattern']) {
             this.elements['floor-pattern'].addEventListener('change', () => {
                 this.app.setFloorPattern(this.elements['floor-pattern'].value);
@@ -635,7 +661,8 @@ export class UI {
             ['light2-azimuth', state.multiLight?.lights?.[1]?.azimuth ?? 135],
             ['light2-intensity', state.multiLight?.lights?.[1]?.intensity ?? 1.0],
             ['light3-azimuth', state.multiLight?.lights?.[2]?.azimuth ?? 0],
-            ['light3-intensity', state.multiLight?.lights?.[2]?.intensity ?? 1.2]
+            ['light3-intensity', state.multiLight?.lights?.[2]?.intensity ?? 1.2],
+            ['chromatic-strength', state.effects.chromaticStrength ?? 5.0]
         ];
         
         sliderMappings.forEach(([id, value]) => {
@@ -695,7 +722,9 @@ export class UI {
             ['light-rays', state.effects.lightRays ?? false],
             ['bloom', state.effects.bloom ?? false],
             ['temporal-reprojection', state.effects.temporalReprojection ?? false],
-            ['multi-light-enabled', state.multiLight?.enabled ?? false]
+            ['multi-light-enabled', state.multiLight?.enabled ?? false],
+            ['chromatic-aberration', state.effects.chromaticAberration ?? false],
+            ['chromatic-radial', state.effects.chromaticRadial ?? true]
         ];
         
         checkboxMappings.forEach(([id, value]) => {
@@ -707,6 +736,7 @@ export class UI {
         this.toggleFogControls(state.effects.fog);
         this.toggleBloomControls(state.effects.bloom ?? false);
         this.toggleTemporalControls(state.effects.temporalReprojection ?? false);
+        this.toggleChromaticControls(state.effects.chromaticAberration ?? false);
         this.toggleMultiLightControls(state.multiLight?.enabled ?? false);
     }
     
@@ -743,6 +773,12 @@ export class UI {
     
     toggleTemporalControls(show) {
         document.querySelectorAll('.temporal-controls').forEach(el => {
+            el.classList.toggle('visible', show);
+        });
+    }
+    
+    toggleChromaticControls(show) {
+        document.querySelectorAll('.chromatic-controls').forEach(el => {
             el.classList.toggle('visible', show);
         });
     }
